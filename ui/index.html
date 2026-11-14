@@ -1,0 +1,166 @@
+﻿<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Unity L10n Tool</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header>
+  <h1>Unity L10n Tool</h1>
+  <div class="hdr-right">
+    <label class="theme">Giao diện
+      <select id="theme" title="Chọn giao diện">
+        <option value="auto">Tự động</option>
+        <option value="light">Sáng</option>
+        <option value="dark">Tối</option>
+        <option value="brown">Tối + Nâu</option>
+      </select>
+    </label>
+    <button id="btnHistory" class="ghost small2">Lịch sử</button>
+    <button id="btnSettings" class="ghost small2">⚙ Cấu hình</button>
+    <span id="status" class="status">Sẵn sàng</span>
+  </div>
+</header>
+
+<main>
+  <section class="left">
+    <div class="card">
+      <h2>Dự án</h2>
+      <label>File XAPK / APK
+        <div class="row"><input id="src" placeholder="D:\...\game.xapk" spellcheck="false"><button class="ghost" data-pick="src">Chọn…</button></div>
+      </label>
+      <label>Thư mục làm việc
+        <div class="row"><input id="work" placeholder="D:\...\work" spellcheck="false"><button class="ghost" data-pick="work">Chọn…</button></div>
+      </label>
+    </div>
+
+    <div class="card step">
+      <h2><b>1</b> Giải nén</h2>
+      <p>Tách XAPK thành các APK con rồi giải nén từng APK vào thư mục làm việc.</p>
+      <button id="btnUnpack" class="act">Giải nén</button>
+    </div>
+
+    <div class="card step">
+      <h2><b>2</b> Quét</h2>
+      <p>Nhận diện engine và liệt kê các bảng config (bảng nhiều chữ xếp trước).</p>
+      <label>Lọc tên bundle (regex)<input id="scanPat" value="config" spellcheck="false"></label>
+      <button id="btnScan" class="act">Quét</button>
+    </div>
+
+    <div class="card step">
+      <h2><b>3</b> Xuất text</h2>
+      <label>Bundle cần xuất (regex)<input id="expPat" value="flatbytes_languageconfig" spellcheck="false"></label>
+      <label>Tên cột, cách nhau bằng dấu phẩy (tuỳ chọn)<input id="names" value="cn,en,ko,vi,ru,ja,zhtw,de,fr,th" spellcheck="false"></label>
+      <div class="row">
+        <button id="btnExport" class="act">Xuất ra Excel</button>
+        <button id="btnOpenText" class="ghost">Mở thư mục text</button>
+      </div>
+    </div>
+
+    <div class="card step">
+      <h2><b>4</b> Nhập bản dịch</h2>
+      <p>Đọc mọi file .xlsx trong thư mục <code>text</code>, chỉ ghi các ô đã đổi vào bundle.</p>
+      <button id="btnImport" class="act">Nhập vào bundle</button>
+    </div>
+
+    <div class="card step">
+      <h2><b>5</b> Đóng gói và ký</h2>
+      <label>Công cụ ký — tự dùng <code>libra.pak</code> kèm theo nếu có; để trống thì chỉ đóng gói
+        <div class="row"><input id="signer" placeholder="tự dò libra.pak / uber-apk-signer.jar" spellcheck="false"><button class="ghost" data-pick="signer">Chọn…</button></div>
+      </label>
+      <div class="row">
+        <button id="btnPack" class="act">Đóng gói APK</button>
+        <button id="btnOpenOut" class="ghost">Mở thư mục kết quả</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="right">
+    <div class="card tabs">
+      <div class="tabbar" id="tabbar" role="tablist">
+        <button class="tab active" data-tab="scan" role="tab"><span class="tl">Kết quả quét</span></button>
+        <button class="tab" data-tab="files" role="tab"><span class="tl">📂 Tệp game</span></button>
+      </div>
+      <div class="panes" id="panes">
+        <div class="pane active" data-pane="scan">
+          <div id="facts" class="facts"><span class="muted">Chưa quét.</span></div>
+          <div class="tablewrap">
+            <table id="tables">
+              <thead><tr><th>Bảng</th><th class="num">Dòng</th><th class="num">Cột chuỗi</th><th class="num">Ký tự</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+          <p class="muted hint">Nhấp đúp hoặc chuột phải vào một bảng để mở nó trong tab và sửa trực tiếp. <span class="badge">đã sửa</span> = bảng đang có bản sửa trong <code>work\mod</code>.</p>
+        </div>
+        <div class="pane" data-pane="files">
+          <div class="xnav">
+            <button id="xside" class="xb" title="Hiện/ẩn cột các bước bên trái">☰</button>
+            <button id="xback" class="xb" title="Quay lại (Alt+←)">←</button>
+            <button id="xfwd" class="xb" title="Tiến tới (Alt+→)">→</button>
+            <button id="xup" class="xb" title="Lên một cấp (Alt+↑)">↑</button>
+            <button id="xreload" class="xb" title="Làm mới (F5)">⟳</button>
+            <div class="xaddr" id="xaddr" title="Nhấp vào chỗ trống để gõ đường dẫn"></div>
+            <input id="fq" class="xsearch" placeholder="🔍 Tìm trong thư mục làm việc" spellcheck="false">
+          </div>
+          <div class="xcmd">
+            <button id="xextract" class="ghost small2" title="Trích xuất các mục đang chọn">⇩ Trích xuất</button>
+            <button id="fbatch" class="ghost small2">Trích xuất hàng loạt…</button>
+            <button id="xopen" class="ghost small2" title="Mở bằng ứng dụng mặc định / mở thư mục trong Windows Explorer">Mở bằng Windows</button>
+            <span class="sp"></span>
+            <button id="xtree" class="ghost small2" title="Hiện/ẩn cây thư mục">🌲 Cây thư mục</button>
+            <button id="xpv" class="ghost small2" title="Hiện/ẩn khung xem nội dung (Alt+P)">▣ Khung xem</button>
+          </div>
+          <div class="xsplit" id="xsplit">
+            <div class="ftree" id="ftree" tabindex="0"></div>
+            <div class="xgut" data-g="0" title="Kéo để đổi cỡ"></div>
+            <div class="xpane" id="xp2">
+              <div class="xph">
+                <span class="xpt">📂 Tệp và thư mục</span>
+                <select id="xmode" title="Chế độ xem">
+                  <option value="details">Chi tiết</option>
+                  <option value="large">Biểu tượng lớn</option>
+                  <option value="medium">Biểu tượng vừa</option>
+                  <option value="list">Danh sách</option>
+                </select>
+              </div>
+              <div class="xlist" id="xlist" tabindex="0"></div>
+              <div class="xstatus" id="xstatus"></div>
+            </div>
+            <div class="xgut" data-g="1" title="Kéo để đổi cỡ"></div>
+            <div class="xpane" id="xp3">
+              <div class="xph">
+                <span class="xpt" id="x3title">📦 Nội dung bundle</span>
+                <select id="x3mode" title="Chế độ xem">
+                  <option value="details">Chi tiết</option>
+                  <option value="large">Biểu tượng lớn</option>
+                  <option value="medium">Biểu tượng vừa</option>
+                </select>
+              </div>
+              <div class="xph2">
+                <input id="x3q" placeholder="Lọc theo tên…" spellcheck="false">
+                <label class="chk inl" title="Hiện cả GameObject, Material, Shader…"><input type="checkbox" id="fall"> Mọi đối tượng</label>
+              </div>
+              <div class="xlist" id="xbun" tabindex="0"></div>
+              <div class="xstatus" id="x3status"></div>
+            </div>
+            <div class="xgut" data-g="2" title="Kéo để đổi cỡ"></div>
+            <div class="fview" id="fview"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="card log">
+      <h2 id="logHead" title="Nhấp để thu gọn / mở rộng nhật ký"><button id="btnLogToggle" class="logtg" title="Thu gọn / mở rộng">−</button> Nhật ký <span id="logNew" class="lognew" hidden></span> <button id="btnClear" class="ghost small">Xoá</button></h2>
+      <pre id="log"></pre>
+    </div>
+  </section>
+</main>
+<div id="ctx" class="ctx" role="menu" hidden></div>
+<div id="mask" class="mask" hidden><div class="modal" id="modal"></div></div>
+<script src="main.js"></script>
+<script src="editor.js"></script>
+<script src="files.js"></script>
+</body>
+</html>

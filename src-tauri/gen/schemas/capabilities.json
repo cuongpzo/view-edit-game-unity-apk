@@ -1,0 +1,1 @@
+{"default":{"identifier":"default","description":"Quyen cho cua so chinh","local":true,"windows":["main"],"permissions":["core:default","core:window:allow-destroy","core:window:allow-close","dialog:default"]}}

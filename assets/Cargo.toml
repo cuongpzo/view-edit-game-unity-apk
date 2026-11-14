@@ -1,0 +1,14 @@
+[package]
+name = "l10n-assets"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1"
+l10n-core = { path = "../core" }
+lewton = { version = "0.10", default-features = false }
+lz4_flex = { version = "0.11", default-features = false, features = ["std", "safe-decode"] }
+png = "0.17"
+serde = { version = "1", features = ["derive"] }
+texture2ddecoder = "0.1"
+walkdir = "2"

@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = ["core", "assets", "src-tauri"]
+
+[profile.release]
+opt-level = 3
+strip = true
